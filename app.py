@@ -7,19 +7,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 
 try:
-    from train_models import (
-        train_and_evaluate_logistic_regression as lr,
-        train_and_evaluate_decision_tree as dt,
-        train_and_evaluate_knn as knn,
-        train_and_evaluate_naive_bayes as nb,
-        train_and_evaluate_random_forest as rf,
-        train_and_evaluate_xgboost as xgb,
-        run_all_models
-    )
+    from model.logistic_regression import train_and_evaluate as lr
+    from model.decision_tree import train_and_evaluate as dt
+    from model.knn import train_and_evaluate as knn
+    from model.naive_bayes import train_and_evaluate as nb
+    from model.random_forest import train_and_evaluate as rf
+    from model.xgboost_model import train_and_evaluate as xgb
     models_available = True
     missing_model_import_error = None
 except Exception as e:
-    lr = dt = knn = nb = rf = xgb = run_all_models = None
+    lr = dt = knn = nb = rf = xgb = None
     models_available = False
     import traceback
     missing_model_import_error = traceback.format_exc()
@@ -146,8 +143,3 @@ if df is not None:
                                                output_dict=True)
                 report_df = pd.DataFrame(report).transpose().round(4)
                 st.table(report_df)
-
-            if st.button("Run All Models"):
-                summary_df = run_all_models(X_train, X_test, y_train, y_test)
-                st.subheader("📊 Model Comparison")
-                st.table(summary_df)
