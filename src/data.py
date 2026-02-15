@@ -4,6 +4,8 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # Default dataset URL
 BANK_DATA_URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank.csv"
+BANK_ZIP_URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank.zip"
+
 
 def load_data(source: str = "url", uploaded_file=None) -> pd.DataFrame:
     """
@@ -23,13 +25,49 @@ def load_data(source: str = "url", uploaded_file=None) -> pd.DataFrame:
     """
     try:
         if source == "url":
-            df = pd.read_csv(BANK_DATA_URL, sep=";")
-            st.info("Loading Bank Marketing dataset from UCI repository...")
-            st.success(f"✅ Dataset loaded successfully! Shape: {df.shape}")
-            return df
+            try:
+                df = pd.read_csv(BANK_DATA_URL, sep=";")
+                st.info("Loading Bank Marketing dataset from UCI repository...")
+                st.success(f"✅ Dataset loaded successfully! Shape: {df.shape}")
+                return df
+            except Exception as e:
+                # CSV from UCI URL failed; silently attempt local file and ZIP fallback
+                # try local copy first
+                try:
+                    import os
+                    if os.path.exists('data/bank.csv'):
+                        df_local = pd.read_csv('data/bank.csv', sep=';')
+                        st.success(f"✅ Loaded local dataset: data/bank.csv (shape: {df_local.shape})")
+                        return df_local
+                except Exception:
+                    pass
+
+                # try ZIP archive from UCI
+                try:
+                    import urllib.request, io, zipfile
+                    with urllib.request.urlopen(BANK_ZIP_URL, timeout=20) as resp:
+                        data = resp.read()
+                    with zipfile.ZipFile(io.BytesIO(data)) as z:
+                        for name in ('bank-full.csv', 'bank.csv'):
+                            if name in z.namelist():
+                                with z.open(name) as f:
+                                    df_zip = pd.read_csv(f, sep=';')
+                                    st.success(f"✅ Loaded dataset from ZIP: {name} (shape: {df_zip.shape})")
+                                    return df_zip
+                except Exception as e2:
+                    st.error(f"❌ Failed to load dataset from UCI (CSV and ZIP attempts failed).\nCSV error: {e}\nZIP error: {e2}")
+                    return None
 
         elif source == "upload" and uploaded_file is not None:
-            df = pd.read_csv(uploaded_file, sep=";")
+            # try semicolon first, fall back to default delimiter
+            try:
+                df = pd.read_csv(uploaded_file, sep=";")
+            except Exception:
+                try:
+                    uploaded_file.seek(0)
+                except Exception:
+                    pass
+                df = pd.read_csv(uploaded_file)
             st.success(f"✅ Dataset uploaded successfully! Shape: {df.shape}")
             return df
 

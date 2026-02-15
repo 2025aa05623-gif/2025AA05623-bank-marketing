@@ -26,6 +26,14 @@ except Exception as e:
 st.set_page_config(page_title="Bank Marketing Classification")
 st.title("🏦 Bank Marketing Classification")
 
+# Download button for test CSV
+st.download_button(
+    label="📥 Download Test CSV",
+    data=df.to_csv(index=False).encode("utf-8"),
+    file_name="adult_income_test.csv",
+    mime="text/csv"
+)
+
 from data import load_data, show_sample, preprocess_data
 
 # Dataset source selection
