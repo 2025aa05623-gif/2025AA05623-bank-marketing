@@ -1,4 +1,5 @@
 import pandas as pd
+import logging
 import streamlit as st
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
@@ -49,13 +50,12 @@ def load_data(source: str = "url", uploaded_file=None) -> pd.DataFrame:
                         data = resp.read()
                     with zipfile.ZipFile(io.BytesIO(data)) as z:
                         for name in ('bank-full.csv', 'bank.csv'):
-                            if name in z.namelist():
-                                with z.open(name) as f:
-                                    df_zip = pd.read_csv(f, sep=';')
-                                    st.success(f"✅ Loaded dataset from ZIP: {name} (shape: {df_zip.shape})")
-                                    return df_zip
+                                    if name in z.namelist():
+                                        with z.open(name) as f:
+                                            df_zip = pd.read_csv(f, sep=';')
+                                            return df_zip
                 except Exception as e2:
-                    st.error(f"❌ Failed to load dataset from UCI (CSV and ZIP attempts failed).\nCSV error: {e}\nZIP error: {e2}")
+                    logging.exception("Failed to load dataset from UCI (CSV and ZIP attempts failed).")
                     return None
 
         elif source == "upload" and uploaded_file is not None:
@@ -68,14 +68,12 @@ def load_data(source: str = "url", uploaded_file=None) -> pd.DataFrame:
                 except Exception:
                     pass
                 df = pd.read_csv(uploaded_file)
-            st.success(f"✅ Dataset uploaded successfully! Shape: {df.shape}")
             return df
 
         else:
-            st.error("❌ No valid dataset source provided.")
             return None
     except Exception as e:
-        st.error(f"❌ Failed to load dataset: {e}")
+        logging.exception("Failed to load dataset")
         return None
 
 
@@ -91,7 +89,7 @@ def show_sample(df: pd.DataFrame, rows: int = 10):
         Number of rows to show.
     """
     if df is not None:
-        st.dataframe(df.head(rows), width='stretch')
+        st.dataframe(df.head(rows))
 
 
 def preprocess_data(df: pd.DataFrame, target_column: str = "y"):
