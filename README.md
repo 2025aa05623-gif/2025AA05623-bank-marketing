@@ -1,1 +1,1 @@
-# ml-assignment-2-income-classification
+# ml-assignment-2-Bank Marketing
